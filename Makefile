@@ -1,13 +1,13 @@
 SHELL = /usr/bin/env bash -xeuo pipefail
 
-stack_name:=""
-prefix_github_repositories:="xxxx/*"
+stack_name:="prepare"
+github_organization:="luciferous-public-lambda-layers"
 
 deploy:
 	sam deploy \
 		--stack-name $(stack_name) \
 		--template-file template.yml \
-		--parameter-overrides PrefixGitHubRepository=$(prefix_github_repositories) \
+		--parameter-overrides GithubOrganizationName=$(github_organization) \
 		--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
 		--no-fail-on-empty-changeset
 

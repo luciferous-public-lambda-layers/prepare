@@ -1,5 +1,5 @@
 Parameters:
-  PrefixGitHubRepository:
+  GithubOrganizationName:
     Type: String
 
 Resources:
@@ -23,9 +23,9 @@ Resources:
               Federated: !Ref OidcProviderGitHub
             Condition:
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${PrefixGitHubRepository}
+                token.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganizationName}/*
       Policies:
-        - PolicyName: CloudFormationDeploy
+        - PolicyName: CdkCall
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -40,6 +40,25 @@ Resources:
                       - deploy
                       - lookup
 
+  RoleCdkBootstrap:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderGitHub
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganizationName}/bootstrap:ref:refs/heads/master
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+
 Outputs:
   RoleArnCdkCall:
     Value: !GetAtt RoleCdkCall.Arn
+
+  RoleArnCdkBootstrap:
+    Value: !GetAtt RoleCdkBootstrap.Arn
