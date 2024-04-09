@@ -1,0 +1,45 @@
+Parameters:
+  PrefixGitHubRepository:
+    Type: String
+
+Resources:
+  OidcProviderGitHub:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 1b511abead59c6ce207077c0bf0e0043b1382612
+
+  RoleCdkCall:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderGitHub
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${PrefixGitHubRepository}
+      Policies:
+        - PolicyName: CloudFormationDeploy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: "*"
+                Condition:
+                  ForAnyValue:StringEquals:
+                    iam:ResourceTag/aws-cdk:bootstrap-role:
+                      - image-publishing
+                      - file-publishing
+                      - deploy
+                      - lookup
+
+Outputs:
+  RoleArnCdkCall:
+    Value: !GetAtt RoleCdkCall.Arn
