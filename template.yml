@@ -1,0 +1,51 @@
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  PrefixGitHubRepository:
+    Type: String
+
+Resources:
+  OidcProviderGitHub:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 1b511abead59c6ce207077c0bf0e0043b1382612
+
+  RoleGithubActionsAdministrator:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref OidcProviderGitHub
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${PrefixGitHubRepository}
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  BucketTerraformStates:
+    Type: AWS::S3::Bucket
+
+  TableTerraformLocks:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: LockID
+        Type: String
+
+Outputs:
+  TableNameTerraformLocks:
+    Value: !Ref TableTerraformLocks
+
+  BucketNameTerraformStates:
+    Value: !Ref BucketTerraformStates
+
+  RoleArnGithubActionsAdministrator:
+    Value: !GetAtt RoleGithubActionsAdministrator.Arn
