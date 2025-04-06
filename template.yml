@@ -33,17 +33,7 @@ Resources:
   BucketTerraformStates:
     Type: AWS::S3::Bucket
 
-  TableTerraformLocks:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      PrimaryKey:
-        Name: LockID
-        Type: String
-
 Outputs:
-  TableNameTerraformLocks:
-    Value: !Ref TableTerraformLocks
-
   BucketNameTerraformStates:
     Value: !Ref BucketTerraformStates
 
